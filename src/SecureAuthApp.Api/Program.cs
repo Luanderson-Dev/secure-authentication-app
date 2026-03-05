@@ -22,7 +22,7 @@ builder.Services.AddScoped<AuthService>(provider =>
 });
 
 builder.Services.AddCors(o => o.AddPolicy("React", p => 
-    p.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
+    p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
 ));
 
 var key = Encoding.ASCII.GetBytes(jwtSecret);
