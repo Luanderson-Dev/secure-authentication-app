@@ -9,20 +9,27 @@ using SecureAuthApp.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString, npgsqlOptions =>
+{
+    npgsqlOptions.EnableRetryOnFailure(
+        maxRetryCount: 5,
+        maxRetryDelay: TimeSpan.FromSeconds(5),
+        errorCodesToAdd: null
+    );
+}));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-var jwtSecret = builder.Configuration["Jwt:Secret"] 
+var jwtSecret = builder.Configuration["Jwt:Secret"]
                 ?? throw new InvalidOperationException("Jwt:Secret não configurado no appsettings!");
 
-builder.Services.AddScoped<AuthService>(provider => 
+builder.Services.AddScoped<AuthService>(provider =>
 {
     var repository = provider.GetRequiredService<IUserRepository>();
     return new AuthService(repository, jwtSecret);
 });
 
-builder.Services.AddCors(o => o.AddPolicy("React", p => 
-    p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
+builder.Services.AddCors(o => o.AddPolicy("React", p =>
+    p.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
 ));
 
 var key = Encoding.ASCII.GetBytes(jwtSecret);
@@ -31,8 +38,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false, ValidateAudience = false
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false,
+            ValidateAudience = false
         };
         options.Events = new JwtBearerEvents
         {
@@ -78,7 +87,7 @@ app.MapPost("/api/auth/login", (LoginRequest req, AuthService auth, HttpContext 
         var token = auth.Login(req.Email, req.Password);
         context.Response.Cookies.Append("access_token", token, new CookieOptions
         {
-            HttpOnly =  true,
+            HttpOnly = true,
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddHours(2)
         });
@@ -94,7 +103,7 @@ app.MapPost("/api/auth/logout", (HttpContext context) =>
 {
     context.Response.Cookies.Delete("access_token");
     return Results.Ok(new { message = "Logged out successfully" });
-}); 
+});
 
 app.MapGet("/api/protected", () =>
 {

@@ -10,5 +10,26 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  api:
+    build:
+      context: .
+      dockerfile: src/SecureAuthApp.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Database=authdb;Username=admin;Password=adminpassword
+      - Jwt__Secret=ProductionKeyInjectedByDockerComposeVerySecure123!
+
+  web:
+    build:
+      context: ./secure-auth-web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
