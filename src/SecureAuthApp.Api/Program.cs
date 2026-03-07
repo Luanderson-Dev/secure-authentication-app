@@ -113,5 +113,3 @@ app.MapPost("/api/auth/logout", (HttpContext context) =>
 app.MapGet("/api/protected", () => Results.Ok(new { message = "This is a protected endpoint" })).RequireAuthorization();
 
 app.Run();
-
-public abstract record LoginRequest(string Email, string Password);
