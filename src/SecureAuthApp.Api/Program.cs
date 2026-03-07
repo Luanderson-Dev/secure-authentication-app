@@ -95,6 +95,7 @@ app.MapPost("/api/auth/login", (LoginRequest req, AuthService auth, HttpContext 
     }
     catch (Exception e)
     {
+        Console.Write(e);
         return Results.Unauthorized();
     }
 });
@@ -105,11 +106,8 @@ app.MapPost("/api/auth/logout", (HttpContext context) =>
     return Results.Ok(new { message = "Logged out successfully" });
 });
 
-app.MapGet("/api/protected", () =>
-{
-    return Results.Ok(new { message = "This is a protected endpoint" });
-}).RequireAuthorization();
+app.MapGet("/api/protected", () => Results.Ok(new { message = "This is a protected endpoint" })).RequireAuthorization();
 
 app.Run();
 
-public record LoginRequest(string Email, string Password);
+public abstract record LoginRequest(string Email, string Password);
