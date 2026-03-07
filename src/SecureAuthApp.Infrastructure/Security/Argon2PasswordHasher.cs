@@ -7,15 +7,10 @@ using SecureAuthApp.Application.Interfaces;
 
 namespace SecureAuthApp.Infrastructure.Security;
 
-public class Argon2PasswordHasher : IPasswordHasher
+public class Argon2PasswordHasher(IConfiguration configuration) : IPasswordHasher
 {
-    private readonly string _pepper;
-
-    public Argon2PasswordHasher(IConfiguration configuration)
-    {
-        _pepper = configuration["PEPPER_SECRET"] 
-                  ?? throw new ArgumentNullException("Pepper secret not found in configuration");
-    }
+    private readonly string _pepper = configuration["PEPPER_SECRET"] 
+                                      ?? throw new ArgumentNullException("Pepper secret not found in configuration");
 
     public string HashPassword(string password)
     {
