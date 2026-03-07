@@ -1,12 +1,16 @@
 using System.Text;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SecureAuthApp.Application;
-using SecureAuthApp.Domain;
-using SecureAuthApp.Infrastructure;
+using SecureAuthApp.Infrastructure.Persistence;
+using SecureAuthApp.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Env.Load();
+builder.Configuration.AddEnvironmentVariables();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString, npgsqlOptions =>

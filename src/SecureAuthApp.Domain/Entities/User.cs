@@ -1,4 +1,4 @@
-﻿namespace SecureAuthApp.Domain;
+﻿namespace SecureAuthApp.Domain.Entities;
 
 public class User
 {

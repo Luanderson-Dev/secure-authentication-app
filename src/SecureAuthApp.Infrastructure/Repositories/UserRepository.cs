@@ -1,6 +1,10 @@
-﻿using SecureAuthApp.Domain;
+﻿using Microsoft.EntityFrameworkCore;
+using SecureAuthApp.Application;
+using SecureAuthApp.Application.Interfaces;
+using SecureAuthApp.Domain.Entities;
+using SecureAuthApp.Infrastructure.Persistence;
 
-namespace SecureAuthApp.Infrastructure;
+namespace SecureAuthApp.Infrastructure.Repositories;
 
 public class UserRepository: IUserRepository
 {
@@ -10,8 +14,15 @@ public class UserRepository: IUserRepository
     {
         _context = context;
     }
-    
-    public void Add(User user) => _context.Users.Add(user);
-    public User? GetByEmail(string email) => _context.Users.FirstOrDefault(u => u.Email == email);
-    public void SaveChanges() => _context.SaveChanges();
+
+    public async Task AddAsync(User user)
+    {
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<User?> GetByEmailAsync(string email)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+    }
 }
