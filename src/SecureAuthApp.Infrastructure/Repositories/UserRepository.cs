@@ -18,4 +18,10 @@ public class UserRepository(AppDbContext context) : IUserRepository
     {
         return await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
     }
+
+    public async Task UpdateAsync(User user)
+    {
+        context.Users.Update(user);
+        await context.SaveChangesAsync();
+    }
 }
