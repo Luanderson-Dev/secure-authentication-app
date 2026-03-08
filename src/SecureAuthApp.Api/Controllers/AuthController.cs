@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Mvc;
 using SecureAuthApp.Application.DTOs;
 using SecureAuthApp.Application.Interfaces;
 using SecureAuthApp.Domain.Entities;
@@ -36,30 +37,89 @@ public class AuthController(IUserRepository userRepository, IPasswordHasher pass
             return Unauthorized(new {Message = "Invalid email or password"});
         }
         
-        bool isPasswordValid = passwordHasher.VerifyPassword(request.Password, user.PasswordHash);
-        if (!isPasswordValid)
-        {
-            return Unauthorized(new { Message = "E-mail ou senha incorretos." });
-        }
-
-        string token = jwtProvider.GenerateToken(user);
+        string accessToken = jwtProvider.GenerateToken(user);
+        string refreshToken = jwtProvider.GenerateRefreshToken();
         
-        var cookiesOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddHours(2)
-        };
+        user.SetRefreshToken(refreshToken, DateTime.UtcNow.AddDays(7));
+        await userRepository.UpdateAsync(user);
         
-        Response.Cookies.Append("access_token", token, cookiesOptions);
+       SetTokenCookies(accessToken, refreshToken);
         return Ok(new {Message = "Login successful"});
     }
 
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh()
+    {
+        if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken))
+        {
+            return Unauthorized(new {Message = "Invalid refresh token"});
+        }
+        
+        var accesToken = Request.Cookies["access_token"];
+        if (string.IsNullOrEmpty(accesToken)) return Unauthorized();
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(accesToken);
+        var email = jwtToken.Claims.First(claim => claim.Type == JwtRegisteredClaimNames.Email).Value;
+        
+        var user = await userRepository.GetByEmailAsync(email);
+
+        if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        {
+            return Unauthorized(new {Message = "Session expired or invalid. Please log in again"});
+        }
+        
+        string newAccessToken = jwtProvider.GenerateToken(user);
+        string newRefreshToken = jwtProvider.GenerateRefreshToken();
+        
+        user.SetRefreshToken(newRefreshToken, DateTime.UtcNow.AddDays(7));
+        await userRepository.UpdateAsync(user);
+        
+        SetTokenCookies(newAccessToken, newRefreshToken);
+        return Ok(new {Message = "Refresh successful"});
+    }
+
     [HttpPost("logout")]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
         Response.Cookies.Delete("access_token");
+        Response.Cookies.Delete("refresh_token");
+
+        if (Request.Cookies.TryGetValue("access_token", out var accessToken))
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(accessToken);
+            var email = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value;
+
+            if (email != null)
+            {
+                var user = await userRepository.GetByEmailAsync(email);
+                if (user != null)
+                {
+                    user.RevokeRefreshToken();
+                    await userRepository.UpdateAsync(user);
+                }
+            }
+        }
+        
         return Ok(new {Message = "Logged out successfully"});
+    }
+
+    private void SetTokenCookies(string accessToken, string refreshToken)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict
+        };
+
+        var accessOptions = cookieOptions;
+        accessOptions.Expires = DateTime.UtcNow.AddMinutes(15);
+        Response.Cookies.Append("access_token", accessToken, cookieOptions);
+
+        var refreshOptions = cookieOptions;
+        refreshOptions.Expires = DateTime.UtcNow.AddDays(7);
+        Response.Cookies.Append("refresh_token", refreshToken, cookieOptions);
     }
 }
