@@ -110,8 +110,8 @@ public class AuthController(IUserRepository userRepository, IPasswordHasher pass
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict
+            Secure = false,
+            SameSite = SameSiteMode.Lax
         };
 
         var accessOptions = cookieOptions;
