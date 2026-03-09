@@ -15,7 +15,7 @@ export async function fetchProtectedData() {
 	const res = await fetch(`${baseUrl}/protected`, {
 		method: 'GET',
 		headers: {
-			Cookie: `acces_token=${authToken}`,
+			Cookie: `access_token=${authToken}`,
 		},
 		cache: 'no-store',
 	});
