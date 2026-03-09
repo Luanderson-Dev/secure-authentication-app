@@ -3,6 +3,7 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using SecureAuthApp.Application.Interfaces;
 using SecureAuthApp.Infrastructure.Persistence;
 using SecureAuthApp.Infrastructure.Repositories;
@@ -64,10 +65,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new  OpenApiInfo
+    {
+        Title = "SecureAuthApp API", 
+        Version = "v1",
+        Description = "End-to-end API authentication system utilizing Argon2, JWT, and HttpOnly Cookies."
+    });
+});
+
 var app = builder.Build();
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SecureAuth API v1");
+    c.RoutePrefix = string.Empty;
+});
 
 using (var scope = app.Services.CreateScope())
 {
