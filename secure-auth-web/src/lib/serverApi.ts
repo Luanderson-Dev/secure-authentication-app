@@ -21,7 +21,7 @@ export async function fetchProtectedData() {
 		if (res.status === 401) {
 			redirect('/login');
 		}
-		throw new Error('Failed to get data');
+		throw new Error('Failed to fetch secure data');
 	}
 
 	return res.json();

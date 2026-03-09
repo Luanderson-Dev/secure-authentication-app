@@ -12,7 +12,7 @@ export default function LogoutButton() {
 			router.push('/login');
 			router.refresh();
 		} catch (error) {
-			console.error('Erro ao fazer logout', error);
+			console.error('Logout failed', error);
 		}
 	};
 
@@ -21,7 +21,7 @@ export default function LogoutButton() {
 			onClick={handleLogout}
 			className='bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition'
 		>
-			Sair do Sistema
+			Sign Out
 		</button>
 	);
 }
