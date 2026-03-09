@@ -24,9 +24,11 @@ services:
       context: ./secure-auth-web
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       - api
+    environment:
+      - BACKEND_INTERNAL_URL=http://api:8080/api
 
 volumes:
   postgres_data:
