@@ -29,7 +29,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, Argon2PasswordHasher>();
-builder.Services.AddScoped<IJwtProvider, JwtProvier>();
+builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 
 builder.Services.AddCors(o => o.AddPolicy("Frontend", p =>
     p.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()

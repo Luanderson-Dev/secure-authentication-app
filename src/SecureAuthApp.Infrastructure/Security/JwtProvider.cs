@@ -9,7 +9,7 @@ using SecureAuthApp.Domain.Entities;
 
 namespace SecureAuthApp.Infrastructure.Security;
 
-public class JwtProvier(IConfiguration configuration) : IJwtProvider
+public class JwtProvider(IConfiguration configuration) : IJwtProvider
 {
     private readonly string _jwtSecret = configuration["JWT_SECRET"] 
                                          ?? throw new ArgumentNullException("JWT secret not found in configuration");
