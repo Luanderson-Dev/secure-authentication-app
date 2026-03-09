@@ -9,7 +9,10 @@ export async function fetchProtectedData() {
 		redirect('/login');
 	}
 
-	const res = await fetch('http://localhost/api/protected', {
+	const baseUrl =
+		process.env.BACKEND_INTERNAL_URL || 'http://localhost:8080/api';
+
+	const res = await fetch(`${baseUrl}/protected`, {
 		method: 'GET',
 		headers: {
 			Cookie: `acces_token=${authToken}`,
